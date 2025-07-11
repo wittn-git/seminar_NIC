@@ -3,22 +3,30 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import Lasso
 from fista import Fista
 
-def get_data(n_data_points, n_fixed_coefficients, n_random_coefficients):
-
+def generate_data(n, p, n_fixed_coefficients):
+    
     fixed_coefficients = np.random.uniform(0, 1, size=n_fixed_coefficients)
-    fixed_coefficients = fixed_coefficients / np.sum(fixed_coefficients)
 
-    X, y = [], []
-    for _ in range(n_data_points):
-        x = np.random.uniform(0, 1, size=n_fixed_coefficients + n_random_coefficients)
-        x = x / np.sum(x)
-        X.append(x)
-        y.append(sum(c * x_val for c, x_val in zip(fixed_coefficients, x[:len(fixed_coefficients)])))
-    return np.array(X), np.array(y), fixed_coefficients
+    X = []
+    y = []
+    
+    zero_coefficients = np.zeros(p - n_fixed_coefficients)
+    for _ in range(n):
+        x_i = np.random.normal(size=p) 
+        coefficients = np.concatenate((fixed_coefficients, zero_coefficients))
+        y_i = np.dot(x_i, coefficients)
+        X.append(x_i)
+        y.append(y_i)
+    
+    X = np.array(X)
+    y = np.array(y)
+    
+    X = (X - X.mean(axis=0)) / X.std(axis=0)
+    y = (y - y.mean()) / y.std()
+    
+    return X, y, fixed_coefficients
 
-def get_spike_rates(X, y, n_coefficients, time_steps, lambda_=0.2, tau=10):
-
-    X = X / np.linalg.norm(X)
+def get_spike_rates(X, y, n_coefficients, time_steps, lambda_, tau):
 
     v_reset = 0
     v_threshold=1
@@ -83,21 +91,21 @@ if __name__ == "__main__":
 
     np.random.seed(23655)
 
-    n_data_points = 10000
+    n_data_points = 25000
     n_fixed_coefficients = 2
     n_random_coefficients = 2
     time_steps = 500
-    lambda_ = 6
-    tau = 25
+    
+    lambda_ = 10
+    tau = 2.5
 
     n_coefficients = n_fixed_coefficients + n_random_coefficients
-    X, y, fixed_coefficients = get_data(int(n_data_points * 1.1), n_fixed_coefficients, n_random_coefficients)
+    X, y, fixed_coefficients = generate_data(int(n_data_points * 1.1), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
     true_coefficients = np.concatenate((fixed_coefficients, np.zeros(n_random_coefficients)))
     train_X, train_y = X[:n_data_points], y[:n_data_points]
     test_X, test_y = X[n_data_points:], y[n_data_points:]
 
-    spike_rates = get_spike_rates(train_X, train_y, n_coefficients, time_steps, lambda_=lambda_, tau=tau)
-
+    spike_rates = get_spike_rates(train_X, train_y, n_coefficients, time_steps, lambda_, tau)
     save_lineplot(spike_rates, n_fixed_coefficients, true_coefficients, f'results.png', show=False)
     print("True Coefficients:", true_coefficients)
     print("SLCA coefficients:", spike_rates[:, -1])
@@ -110,7 +118,19 @@ if __name__ == "__main__":
     #print("FISTA Error:", error(fista.coef_, true_coefficients))
 
     # use sklearn
-    model = Lasso(alpha=lambda_)
+    # run sklearn with different alphas and print the best one
+    print("Running Lasso regression with sklearn...")
+    best_score = float('inf')
+    best_alpha = None
+    for alpha in np.linspace(0.1, 100, 250):
+        model = Lasso(alpha=alpha)
+        model.fit(X, y)
+        score = error(model.coef_, test_X, test_y)
+        if score < best_score:
+            best_score = score
+            best_alpha = alpha
+    
+    model = Lasso(alpha=best_alpha)
     model.fit(X, y)
     print("SKL coefficients:", model.coef_)
     print("SKL Error:", error(model.coef_, test_X, test_y))
