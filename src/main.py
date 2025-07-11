@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import Lasso
-from fista import Fista
+from fista import run_fista
+from coordinate_descent import run_coorddesc
+from slca import run_slca
 
 def generate_data(n, p, n_fixed_coefficients):
     
@@ -26,37 +27,10 @@ def generate_data(n, p, n_fixed_coefficients):
     
     return X, y, fixed_coefficients
 
-def get_spike_rates(X, y, n_coefficients, time_steps, lambda_, tau):
+def save_lineplot(results, n_fixed_coefficients, true_coefficients, timesteps, file_name='spike_rates_plot.png', show=True):
 
-    v_reset = 0
-    v_threshold=1
-
-    spikes = np.zeros((n_coefficients, time_steps))
-    filtered_spikes = np.zeros((n_coefficients, time_steps))
-
-    b = X.T @ y
-    w = X.T @ X    
-
-    v = np.zeros(n_coefficients)
-    for t in range(time_steps):
-        if t > 0:
-            filtered_spikes[:, t] = filtered_spikes[:, t - 1] * np.exp(-1 / tau) + spikes[:, t - 1]
-        mu = b - w @ filtered_spikes[:, t]
-        v += np.clip(mu - lambda_, 0, None)
-        spikes[:, t] = (v >= v_threshold).astype(float)
-        v[spikes[:, t] == 1] = v_reset
-
-    spike_rates = np.zeros((n_coefficients, time_steps))
-    for i in range(n_coefficients):
-        for t in range(time_steps):
-            spike_rates[i, t] = np.sum(spikes[i, :t + 1]) / (t + 1) if t > 0 else spikes[i, t]
-            
-    return spike_rates
-
-def save_lineplot(spike_rates, n_fixed_coefficients, true_coefficients, file_name='spike_rates_plot.png', show=True):
-
-    n_coefficients = spike_rates.shape[0]
-    fig, axes = plt.subplots(nrows=max(n_fixed_coefficients, len(true_coefficients) - n_fixed_coefficients), ncols=2, figsize=(10*1.75, 2 * n_coefficients), sharex=True)
+    n_coefficients = len(true_coefficients)
+    fig, axes = plt.subplots(nrows=max(n_fixed_coefficients, len(true_coefficients) - n_fixed_coefficients), ncols=2, figsize=(10*1.75, 3 * n_coefficients), sharex=True)
 
     axes = axes.flatten() if n_coefficients > 1 else [axes]
 
@@ -64,18 +38,17 @@ def save_lineplot(spike_rates, n_fixed_coefficients, true_coefficients, file_nam
     
     for i in range(n_coefficients):
         axes[i].tick_params(axis='both', which='major', labelsize=14)
-        axes[i].plot(spike_rates[i, :], label=f'Coefficient {i+1}')
-        if i == 0:
-            axes[i].axhline(y=true_coefficients[i], color='r', linestyle='--', label='True Coefficient')
-        else:
-            axes[i].axhline(y=true_coefficients[i], color='r', linestyle='--')
+        axes[i].axhline(y=true_coefficients[i], color='r', linestyle='--', label='True Coefficient')
         if i == n_coefficients - 1 or i == n_fixed_coefficients:
             axes[i].set_xlabel('Time Steps', fontsize=18)
         if i % 2 == 0:
             axes[i].set_ylabel('Spike Rate', fontsize=18)
         axes[i].set_ylim(-0.1, 1.1)
-        axes[i].set_xticks(np.arange(0, spike_rates.shape[1], spike_rates.shape[1]/10))
-        axes[i].legend()
+        axes[i].set_xticks(np.arange(0, timesteps, timesteps/10))
+        axes[i].set_title(f'Coefficient {i+1}', fontsize=18)
+        for name, coefficients in results.items():
+            axes[i].plot(coefficients[i, :], label=name)
+        axes[i].legend(fontsize=12, loc='upper right')
     
     plt.tight_layout()
     plt.savefig(file_name)
@@ -83,9 +56,8 @@ def save_lineplot(spike_rates, n_fixed_coefficients, true_coefficients, file_nam
         plt.show()
     plt.close(fig)
 
-def error(estimated_coefficients, test_X, test_y):
-    predictions =  test_X @ estimated_coefficients
-    return np.mean((predictions - test_y) ** 2)
+def diff(estimated_coefficients, coefficients):
+    return sum([a - b for a, b in zip(estimated_coefficients, coefficients)]) / len(coefficients)
 
 if __name__ == "__main__":
 
@@ -94,43 +66,31 @@ if __name__ == "__main__":
     n_data_points = 25000
     n_fixed_coefficients = 2
     n_random_coefficients = 2
-    time_steps = 500
-    
-    lambda_ = 10
-    tau = 2.5
 
+    args = {
+        "time_steps": 500,
+        "lambda": 10,
+        "tau": 2.5,
+        "n_coefficients": n_fixed_coefficients + n_random_coefficients
+    }
+    
     n_coefficients = n_fixed_coefficients + n_random_coefficients
-    X, y, fixed_coefficients = generate_data(int(n_data_points * 1.1), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
+    X, y, fixed_coefficients = generate_data(int(n_data_points), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
     true_coefficients = np.concatenate((fixed_coefficients, np.zeros(n_random_coefficients)))
-    train_X, train_y = X[:n_data_points], y[:n_data_points]
-    test_X, test_y = X[n_data_points:], y[n_data_points:]
-
-    spike_rates = get_spike_rates(train_X, train_y, n_coefficients, time_steps, lambda_, tau)
-    save_lineplot(spike_rates, n_fixed_coefficients, true_coefficients, f'results.png', show=False)
     print("True Coefficients:", true_coefficients)
-    print("SLCA coefficients:", spike_rates[:, -1])
-    print("SLCA Error:", error(spike_rates[:, -1], test_X, test_y))
 
-    # run fista
-    #fista = Fista(loss='squared-hinge', penalty='l11', lambda_=lambda_, n_iter=50)
-    #fista.fit(X, y)
-    #print("FISTA coefficients:", fista.coef_)
-    #print("FISTA Error:", error(fista.coef_, true_coefficients))
+    algorithms = {
+        "S-LCA": run_slca,
+        "Coordinate Descent": run_coorddesc,
+        "Fista": run_fista
+    }
 
-    # use sklearn
-    # run sklearn with different alphas and print the best one
-    print("Running Lasso regression with sklearn...")
-    best_score = float('inf')
-    best_alpha = None
-    for alpha in np.linspace(0.1, 100, 250):
-        model = Lasso(alpha=alpha)
-        model.fit(X, y)
-        score = error(model.coef_, test_X, test_y)
-        if score < best_score:
-            best_score = score
-            best_alpha = alpha
-    
-    model = Lasso(alpha=best_alpha)
-    model.fit(X, y)
-    print("SKL coefficients:", model.coef_)
-    print("SKL Error:", error(model.coef_, test_X, test_y))
+    results = {}
+
+    for name, algorithm in algorithms.items():
+        print(f"Running {name}...")
+        results[name] = algorithm(X, y, args)
+        print(f"{name} Coefficients:", results[name][:, -1])
+        print(f"{name} Diff:", diff(results[name][:, -1], true_coefficients))
+
+    save_lineplot(results, n_fixed_coefficients, true_coefficients, args["time_steps"], f'plots/results.png', show=False)

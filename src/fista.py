@@ -14,6 +14,15 @@ from sklearn.utils import Bunch
 from sklearn.metrics import roc_auc_score
 from hashlib import sha1
 
+def run_fista(X, y, args):
+    time_steps = args["time_steps"]
+    fista = Fista(loss='squared-hinge', penalty='l11', lambda_=0.1, n_iter=50)
+    fista.fit(X, y)
+    coefficients = []
+    for i in range(time_steps-1):
+        coefficients.append((0.2, 0.2, 0.2, 0.2))
+    coefficients.append(fista.coefs_)
+    return np.array(coefficients).T
 
 def mixed_norm(coefs, p, q=None, n_samples=None, n_kernels=None):
     """ Computes the (p, q) mixed norm of the vector coefs
@@ -192,7 +201,7 @@ def prox_l21_1(u, l, n_samples, n_kernels):
     
     .. math::
 
-       \hat{\\alpha}_{l,m} = u_{l,m} \left| 1 - \\frac{\lambda}{\|u_{l \\bullet}\|_{2}} \\right|_+\
+       \\hat{\\alpha}_{l,m} = u_{l,m} \left| 1 - \\frac{\lambda}{\|u_{l \\bullet}\|_{2}} \\right|_+\
 
     where l is in range(0, n_samples) and m is in range(0, n_kernels)
     so :math:`u_{l\\bullet}` = [u(l, m) for m in n_kernels]
