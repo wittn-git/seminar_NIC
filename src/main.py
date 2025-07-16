@@ -45,19 +45,20 @@ if __name__ == "__main__":
     n_random_coefficients = 2
 
     args = {
-        "max_time": 1,
-        "max_steps": 20000,
+        "max_time": 1.5,
+        "max_steps": 25000,
         "lambda": 10,
         "tau": 2.5,
         "learning_rate": 0.01,
         "n_coefficients": n_fixed_coefficients + n_random_coefficients,
-        "alpha": 1.6
+        "alpha": 0.8
     }
     
     n_coefficients = n_fixed_coefficients + n_random_coefficients
     X, y, X_norm, y_norm, fixed_coefficients = generate_data(int(n_data_points), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
     true_coefficients = np.concatenate((fixed_coefficients, np.zeros(n_random_coefficients)))
     print("True Coefficients:", true_coefficients)
+    error_func = lambda coeffs: get_error(X, y, coeffs)
 
     algorithms = {
         "S-LCA": run_slca,
@@ -68,8 +69,7 @@ if __name__ == "__main__":
 
     for name, algorithm in algorithms.items():
         print(f"Running {name}...")
-        coeffs, times = algorithm(X_norm, y_norm, args)
-        errors = [get_error(X, y, cs) for cs in coeffs.T]
+        coeffs, times, errors = algorithm(X_norm, y_norm, error_func, args)
         results[name] = {"coeffs": coeffs, "times": times, "errors": errors}
         print(f"{name} Coefficients:", results[name]["coeffs"][:, -1])
         print(f"{name} Diff:", diff(results[name]["coeffs"][:, -1], true_coefficients))

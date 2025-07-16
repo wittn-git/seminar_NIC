@@ -1,7 +1,7 @@
 import numpy as np
 import time
 
-def run_slca(X, y, args):
+def run_slca(X, y, error_func, args):
 
     # TODO implement lambda and tau search
 
@@ -34,8 +34,10 @@ def run_slca(X, y, args):
     
     spikes = spikes[:, :t]
     spike_rates = np.zeros((n_coefficients, t))
-    for i in range(n_coefficients):
-        for j in range(t):
+    errors = []
+    for j in range(t):
+        for i in range(n_coefficients):
             spike_rates[i, j] = np.sum(spikes[i, :j + 1]) / (j + 1) if j > 0 else spikes[i, j]
+        errors.append(error_func(spike_rates[:, j]))
 
-    return spike_rates, times
+    return spike_rates, times, errors

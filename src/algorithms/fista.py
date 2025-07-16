@@ -13,10 +13,10 @@ def run_fista(X, y, error_function, args):
     n_coefficients, max_time, max_steps = args["n_coefficients"], args["max_time"], args["max_steps"]
     alpha, learning_rate = args["alpha"], args["learning_rate"]
     l1_prox = L1(alpha=alpha)
-    coefficients, times = fista(X, y, l1_prox, n_coefficients, learning_rate, max_time, max_steps)
-    return coefficients, times
+    coefficients, times, errors = fista(X, y, l1_prox, n_coefficients, learning_rate, max_time, max_steps, error_function)
+    return coefficients, times, errors
 
-def fista(X, y, l1_prox, n_coefficients, lr, max_time, max_steps):
+def fista(X, y, l1_prox, n_coefficients, lr, max_time, max_steps, error_function):
     
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.float32)
@@ -29,6 +29,7 @@ def fista(X, y, l1_prox, n_coefficients, lr, max_time, max_steps):
     time_0 = time.time()
     times = [0]
     t = 0
+    errors = [error_function(coefficients[:, 0])]
 
     while time.time() - time_0 < max_time:
         optimizer.zero_grad()
@@ -41,6 +42,7 @@ def fista(X, y, l1_prox, n_coefficients, lr, max_time, max_steps):
         times.append(time.time() - time_0)
         t += 1
         coefficients[:, t] = theta.detach().numpy()
+        errors.append(error_function(coefficients[:, t]))
 
     coefficients = coefficients[:, :t+1]
-    return coefficients, times
+    return coefficients, times, errors
