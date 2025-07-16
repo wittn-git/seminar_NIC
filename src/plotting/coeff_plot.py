@@ -25,5 +25,5 @@ def save_lineplot(results, n_fixed_coefficients, true_coefficients, timesteps):
         axes[i].legend(fontsize=12, loc='upper right')
     
     plt.tight_layout()
-    plt.savefig('plots/coeffs.png')
+    plt.savefig('plots/coeff_plot.png')
     plt.close(fig)

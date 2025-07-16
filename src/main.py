@@ -1,8 +1,7 @@
 from algorithms.fista import run_fista
-from algorithms.ista import run_ista
-from algorithms.coordinate_descent import run_coorddesc
 from algorithms.slca import run_slca
 from plotting.coeff_plot import save_lineplot
+from plotting.time_plot import save_timeplot
 import numpy as np
 
 def generate_data(n, p, n_fixed_coefficients):
@@ -23,15 +22,21 @@ def generate_data(n, p, n_fixed_coefficients):
     X = np.array(X)
     y = np.array(y)
     
-    X = (X - X.mean(axis=0)) / X.std(axis=0)
-    y = (y - y.mean()) / y.std()
+    X_norm = (X - X.mean(axis=0)) / X.std(axis=0)
+    y_norm = (y - y.mean()) / y.std()
     
-    return X, y, fixed_coefficients
+    return X, y, X_norm, y_norm, fixed_coefficients
 
 def diff(estimated_coefficients, coefficients):
     return sum([a - b for a, b in zip(estimated_coefficients, coefficients)]) / len(coefficients)
 
+def get_error(X, y, coefficients):
+    y_pred = X @ coefficients
+    return np.mean((y_pred - y) ** 2)
+
 if __name__ == "__main__":
+
+    # TODO impl. multi run experiments
 
     np.random.seed(23655)
 
@@ -40,36 +45,35 @@ if __name__ == "__main__":
     n_random_coefficients = 2
 
     args = {
-        "time_steps": 500,
+        "max_time": 1,
+        "max_steps": 20000,
         "lambda": 10,
         "tau": 2.5,
         "learning_rate": 0.01,
         "n_coefficients": n_fixed_coefficients + n_random_coefficients,
-        "alpha": 1.1
+        "alpha": 1.6
     }
     
     n_coefficients = n_fixed_coefficients + n_random_coefficients
-    X, y, fixed_coefficients = generate_data(int(n_data_points), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
+    X, y, X_norm, y_norm, fixed_coefficients = generate_data(int(n_data_points), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
     true_coefficients = np.concatenate((fixed_coefficients, np.zeros(n_random_coefficients)))
     print("True Coefficients:", true_coefficients)
 
     algorithms = {
         "S-LCA": run_slca,
-        #"Coordinate Descent": run_coorddesc,
-        "Fista": run_fista,
-        "Ista": run_ista
+        "Fista": run_fista
     }
 
     results = {}
 
     for name, algorithm in algorithms.items():
         print(f"Running {name}...")
-        coeffs, params, times = algorithm(X, y, args)
-        results[name] = {"coeffs": coeffs, "params": params, "times": times}
+        coeffs, times = algorithm(X_norm, y_norm, args)
+        errors = [get_error(X, y, cs) for cs in coeffs.T]
+        results[name] = {"coeffs": coeffs, "times": times, "errors": errors}
         print(f"{name} Coefficients:", results[name]["coeffs"][:, -1])
         print(f"{name} Diff:", diff(results[name]["coeffs"][:, -1], true_coefficients))
-        print(f"{name} Parameters:", results[name]["params"])
+        print(f"{name} Error:", results[name]["errors"][-1])
 
-    save_lineplot(results, n_fixed_coefficients, true_coefficients, args["time_steps"])
-    # make error plot
-    # make time plot
+    save_lineplot(results, n_fixed_coefficients, true_coefficients, max([result["coeffs"].shape[1] for result in results.values()]))
+    save_timeplot(results)

@@ -5,27 +5,24 @@ def run_slca(X, y, args):
 
     # TODO implement lambda and tau search
 
-    params = {
-        "lambda": args["lambda"],
-        "tau": args["tau"]
-    }
-
     v_reset = 0
     v_threshold=1
 
-    n_coefficients, time_steps, lambda_, tau = args["n_coefficients"], args["time_steps"], args["lambda"], args["tau"]
+    n_coefficients, max_time, max_steps,  = args["n_coefficients"], args["max_time"], args["max_steps"]
+    lambda_, tau = args["lambda"], args["tau"]
 
-    spikes = np.zeros((n_coefficients, time_steps))
-    filtered_spikes = np.zeros((n_coefficients, time_steps))
+    spikes = np.zeros((n_coefficients, max_steps))
+    filtered_spikes = np.zeros((n_coefficients, max_steps))
 
     b = X.T @ y
     w = X.T @ X    
 
     times = []
     time_0 = time.time()
+    t = 0
 
     v = np.zeros(n_coefficients)
-    for t in range(time_steps):
+    while time.time() - time_0 < max_time:
         if t > 0:
             filtered_spikes[:, t] = filtered_spikes[:, t - 1] * np.exp(-1 / tau) + spikes[:, t - 1]
         mu = b - w @ filtered_spikes[:, t]
@@ -33,10 +30,12 @@ def run_slca(X, y, args):
         spikes[:, t] = (v >= v_threshold).astype(float)
         v[spikes[:, t] == 1] = v_reset
         times.append(time.time() - time_0)
-
-    spike_rates = np.zeros((n_coefficients, time_steps))
+        t += 1
+    
+    spikes = spikes[:, :t]
+    spike_rates = np.zeros((n_coefficients, t))
     for i in range(n_coefficients):
-        for t in range(time_steps):
-            spike_rates[i, t] = np.sum(spikes[i, :t + 1]) / (t + 1) if t > 0 else spikes[i, t]
-            
-    return spike_rates, params, times
+        for j in range(t):
+            spike_rates[i, j] = np.sum(spikes[i, :j + 1]) / (j + 1) if j > 0 else spikes[i, j]
+
+    return spike_rates, times
