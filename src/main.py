@@ -34,46 +34,52 @@ def get_error(X, y, coefficients):
     y_pred = X @ coefficients
     return np.mean((y_pred - y) ** 2)
 
-if __name__ == "__main__":
+def print_results(true_coefficients, results):
+    print("True Coefficients:", true_coefficients)
+    for name in results.keys():
+        print(f"{name} Coefficients:", results[name]["coeffs"][:, -1])
+        print(f"{name} Diff:", diff(results[name]["coeffs"][:, -1], true_coefficients))
+        print(f"{name} Error:", results[name]["errors"][-1])
+        print()
 
-    # TODO impl. multi run experiments
+def run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficients, algorithms, args):
+    np.random.seed(seed)
 
-    np.random.seed(23655)
-
-    n_data_points = 25000
-    n_fixed_coefficients = 2
-    n_random_coefficients = 2
-
-    args = {
-        "max_time": 1.5,
-        "max_steps": 25000,
-        "lambda": 10,
-        "tau": 2.5,
-        "learning_rate": 0.01,
-        "n_coefficients": n_fixed_coefficients + n_random_coefficients,
-        "alpha": 0.8
-    }
-    
-    n_coefficients = n_fixed_coefficients + n_random_coefficients
     X, y, X_norm, y_norm, fixed_coefficients = generate_data(int(n_data_points), n_fixed_coefficients + n_random_coefficients, n_fixed_coefficients)
     true_coefficients = np.concatenate((fixed_coefficients, np.zeros(n_random_coefficients)))
-    print("True Coefficients:", true_coefficients)
     error_func = lambda coeffs: get_error(X, y, coeffs)
 
+    results = {}
+    for name, algorithm in algorithms.items():
+        coeffs, times, errors = algorithm(X_norm, y_norm, error_func, args)
+        results[name] = {"coeffs": coeffs, "times": times, "errors": errors}
+    
+    return results
+    
+if __name__ == "__main__":
+
+    seeds = [23655]
+
+    n_data_points = 10000
+    n_fixed_coefficients = 2
+    n_random_coefficients = 2
+    n_coefficients = n_fixed_coefficients + n_random_coefficients
+
     algorithms = {
+        # TODO add third method
         "S-LCA": run_slca,
         "Fista": run_fista
     }
 
-    results = {}
+    args = {
+        "max_time": 1,
+        "max_steps": 25000,
+        "n_coefficients": n_fixed_coefficients + n_random_coefficients
+    }
 
-    for name, algorithm in algorithms.items():
-        print(f"Running {name}...")
-        coeffs, times, errors = algorithm(X_norm, y_norm, error_func, args)
-        results[name] = {"coeffs": coeffs, "times": times, "errors": errors}
-        print(f"{name} Coefficients:", results[name]["coeffs"][:, -1])
-        print(f"{name} Diff:", diff(results[name]["coeffs"][:, -1], true_coefficients))
-        print(f"{name} Error:", results[name]["errors"][-1])
+    result_collection = []
+    for seed in seeds:
+        results = run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficients, algorithms, args)
+        result_collection.append(results)    
 
-    save_lineplot(results, n_fixed_coefficients, true_coefficients, max([result["coeffs"].shape[1] for result in results.values()]))
-    save_timeplot(results)
+    save_timeplot(result_collection, args["max_time"], algorithms.keys())
