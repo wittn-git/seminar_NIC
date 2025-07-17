@@ -2,9 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 
-import numpy as np
-from scipy.interpolate import interp1d
-
 def process_results(result_collection, max_time, algorithms):
     common_time = np.linspace(0, max_time, num=500)
     processed_results = {}

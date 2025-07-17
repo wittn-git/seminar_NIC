@@ -6,8 +6,8 @@ import numpy as np
 import time
 from proxtorch.operators import L1
 
-def run_fista(X, y, error_function, args):
-    
+def run_ista(X, y, error_function, args):
+
     n_coefficients, max_time, max_steps = args["n_coefficients"], args["max_time"], args["max_steps"]
     #alphas, learning_rates = np.linspace(0.01, 1, 10), np.linspace(0.001, 0.3, 10)
     alphas, learning_rates = [0.7], [0.01]
@@ -15,7 +15,7 @@ def run_fista(X, y, error_function, args):
     best_coefficients, best_time, best_error = None, None, float('inf')
     for alpha in alphas:
         for learning_rate in learning_rates:
-            coefficients, times = fista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps)
+            coefficients, times = ista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps)
             error = error_function(coefficients[:, -1])
             if error < best_error:
                 best_error = error
@@ -24,44 +24,32 @@ def run_fista(X, y, error_function, args):
 
     return best_coefficients, best_time, [error_function(coeff) for coeff in best_coefficients.T]
 
-def fista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps):
-
+def ista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps):
+    
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.float32)
-
-    theta = torch.zeros(X.shape[1], dtype=torch.float32)
-    y_k = theta.clone()
-    t_k = 1
-
+    theta = Parameter(torch.zeros(X.shape[1]))
+    optimizer = optim.SGD([theta], lr=learning_rate)
     l1_prox = L1(alpha=alpha)
 
     coefficients = np.zeros((n_coefficients, max_steps))
-    coefficients[:, 0] = theta.numpy()
+    coefficients[:, 0] = theta.detach().numpy()
 
     time_0 = time.time()
     times = [0]
-
     t = 0
-    while time.time() - time_0 < max_time and t < max_steps - 1:
 
-        y_k = y_k.detach().requires_grad_(True)
-        y_pred = X @ y_k
+    while time.time() - time_0 < max_time:
+        optimizer.zero_grad()
+        y_pred = X @ theta
         loss = ((y_pred - y) ** 2).mean()
         loss.backward()
-        grad = y_k.grad
-
-        theta_next = l1_prox.prox(y_k - learning_rate * grad, learning_rate)
-
-        t_next = (1 + np.sqrt(1 + 4 * t_k ** 2)) / 2
-        y_next = theta_next + ((t_k - 1) / t_next) * (theta_next - theta)
-
-        theta = theta_next
-        y_k = y_next
-        t_k = t_next
-
+        optimizer.step()
+        with torch.no_grad():
+            theta.data = l1_prox.prox(theta, learning_rate)
+        times.append(time.time() - time_0)
         t += 1
         coefficients[:, t] = theta.detach().numpy()
-        times.append(time.time() - time_0)
 
     coefficients = coefficients[:, :t+1]
     return coefficients, times

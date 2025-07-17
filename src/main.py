@@ -1,4 +1,5 @@
 from algorithms.fista import run_fista
+from algorithms.ista import run_ista
 from algorithms.slca import run_slca
 from plotting.coeff_plot import save_lineplot
 from plotting.time_plot import save_timeplot
@@ -58,6 +59,7 @@ def run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficie
     
 if __name__ == "__main__":
 
+    #seeds = [0, 23655, 12, 124, 2, 289492, 9, 123, 1234, 12345]
     seeds = [23655]
 
     n_data_points = 10000
@@ -66,9 +68,9 @@ if __name__ == "__main__":
     n_coefficients = n_fixed_coefficients + n_random_coefficients
 
     algorithms = {
-        # TODO add third method
         "S-LCA": run_slca,
-        "Fista": run_fista
+        "FISTA": run_fista,
+        "ISTA": run_ista,
     }
 
     args = {
