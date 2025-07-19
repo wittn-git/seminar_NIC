@@ -9,13 +9,13 @@ from proxtorch.operators import L1
 def run_fista(X, y, error_function, args):
     
     n_coefficients, max_time, max_steps = args["n_coefficients"], args["max_time"], args["max_steps"]
-    #alphas, learning_rates = np.linspace(0.01, 1, 10), np.linspace(0.001, 0.3, 10)
-    alphas, learning_rates = [0.7], [0.01]
+    #lambdas, learning_rates = np.linspace(0.01, 1, 10), np.linspace(0.001, 0.3, 10)
+    lambdas, learning_rates = [0.7], [0.01]
 
     best_coefficients, best_time, best_error = None, None, float('inf')
-    for alpha in alphas:
+    for lambda_ in lambdas:
         for learning_rate in learning_rates:
-            coefficients, times = fista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps)
+            coefficients, times = fista(X, y, lambda_, learning_rate, n_coefficients, max_time, max_steps)
             error = error_function(coefficients[:, -1])
             if error < best_error:
                 best_error = error
@@ -24,7 +24,7 @@ def run_fista(X, y, error_function, args):
 
     return best_coefficients, best_time, [error_function(coeff) for coeff in best_coefficients.T]
 
-def fista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps):
+def fista(X, y, lambda_, learning_rate, n_coefficients, max_time, max_steps):
 
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.float32)
@@ -33,7 +33,7 @@ def fista(X, y, alpha, learning_rate, n_coefficients, max_time, max_steps):
     y_k = theta.clone()
     t_k = 1
 
-    l1_prox = L1(alpha=alpha)
+    l1_prox = L1(alpha=lambda_)
 
     coefficients = np.zeros((n_coefficients, max_steps))
     coefficients[:, 0] = theta.numpy()
