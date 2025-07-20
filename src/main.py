@@ -87,8 +87,8 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 1,
-        "max_steps": 25000
+        "max_time": 0.5,
+        "max_steps": 50000
     }
 
     result_collections, titles = [], []
