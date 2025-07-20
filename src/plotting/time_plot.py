@@ -71,4 +71,5 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
     if not os.path.exists('plots'):
         os.makedirs('plots')
     plt.savefig(f'plots/time_plots_grid.png')
+    plt.savefig(f'plots/time_plots_grad.svg')
     plt.close()
