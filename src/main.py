@@ -77,11 +77,11 @@ def get_seed(i, j):
 if __name__ == "__main__":
 
     # experimental setup
-    n_runs = 10
+    n_runs = 30
     coefficient_pairs = [
-        (2, 2),
         (2, 0),
-        (0, 2),
+        (2, 2),
+        (2, 4),
         (4, 4)
     ]
     
