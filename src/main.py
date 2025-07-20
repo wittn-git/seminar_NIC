@@ -24,8 +24,10 @@ def generate_data(n, p, n_fixed_coefficients):
     X = np.array(X)
     y = np.array(y)
     
-    X_norm = (X - X.mean(axis=0)) / X.std(axis=0)
-    y_norm = (y - y.mean()) / y.std()
+    X_std = np.std(X, axis=0)
+    X_norm = (X - np.mean(X, axis=0)) / np.where(X_std == 0, 1, X_std)
+    y_std = np.std(y)
+    y_norm = (y - np.mean(y)) / (y_std if y_std != 0 else 1)
     
     return X, y, X_norm, y_norm, fixed_coefficients
 
