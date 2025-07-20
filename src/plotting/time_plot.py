@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
+import os
 
 def process_results(result_collection, max_time, algorithms):
     common_time = np.linspace(0, max_time, num=500)
@@ -67,5 +68,7 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
         fig.delaxes(axes[row][col])
 
     plt.tight_layout()
+    if not os.path.exists('plots'):
+        os.makedirs('plots')
     plt.savefig(f'plots/time_plots_grid.png')
     plt.close()

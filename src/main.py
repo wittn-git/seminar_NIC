@@ -4,6 +4,7 @@ from algorithms.slca import run_slca
 from plotting.coeff_plot import save_lineplot
 from plotting.time_plot import save_timeplot
 import numpy as np
+import os
 
 def generate_data(n, p, n_fixed_coefficients):
     
@@ -36,7 +37,10 @@ def get_error(X, y, coefficients):
     return np.mean((y_pred - y) ** 2)
 
 def record_results(result_collection, true_coefficients_collection, seeds, algorithm_names, file_name):
-    with open(file_name + ".txt", "w") as f:
+    result_folder = "results"
+    if not os.path.exists(result_folder):
+        os.makedirs(result_folder)
+    with open(f"{result_folder}/{file_name}.txt", "w") as f:
         for i, results in enumerate(result_collection):
             f.write(f"Run {i + 1} (Seed: {seeds[i]}):\n")
             f.write(f"  True Coefficients: {true_coefficients_collection[i]}\n")
