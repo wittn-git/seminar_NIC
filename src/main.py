@@ -35,17 +35,17 @@ def get_error(X, y, coefficients):
     y_pred = X @ coefficients
     return np.mean((y_pred - y) ** 2)
 
-def record_results(result_collection, true_coefficients_collection, seeds, algorithms, file_name):
-    with open(file_name, "w") as f:
+def record_results(result_collection, true_coefficients_collection, seeds, algorithm_names, file_name):
+    with open(file_name + ".txt", "w") as f:
         for i, results in enumerate(result_collection):
             f.write(f"Run {i + 1} (Seed: {seeds[i]}):\n")
             f.write(f"  True Coefficients: {true_coefficients_collection[i]}\n")
-            for name in algorithms.keys():
+            for name in algorithm_names:
                 f.write(f"  {name} Coefficients: {results[name]['coeffs'][:, -1]}\n")
                 f.write(f"  {name} Error: {results[name]['errors'][-1]}\n")
             f.write("\n")
         f.write("Average and Standard Deviation of Last Errors:\n")
-        for name in algorithms.keys():
+        for name in algorithm_names:
             last_errors = [result[name]['errors'][-1] for result in result_collection]
             avg_error = np.mean(last_errors)
             std_error = np.std(last_errors)
