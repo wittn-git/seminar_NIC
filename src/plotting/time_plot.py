@@ -55,6 +55,7 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
         for name, result in processed_results.items():
             ax.plot(result["times"], result["errors"], label=name)
 
+        ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel('Time (s)', fontsize=18)
         ax.set_ylabel('MSE', fontsize=18)

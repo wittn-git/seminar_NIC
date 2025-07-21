@@ -8,7 +8,7 @@ import os
 
 def generate_data(n, p, n_fixed_coefficients):
     
-    fixed_coefficients = np.random.uniform(0, 1, size=n_fixed_coefficients)
+    fixed_coefficients = np.random.uniform(0, 0.5, size=n_fixed_coefficients)
 
     X = []
     y = []
@@ -77,7 +77,7 @@ def get_seed(i, j):
 if __name__ == "__main__":
 
     # experimental setup
-    n_runs = 1
+    n_runs = 30
     coefficient_pairs = [
         (2, 0),
         (2, 2),
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 0.25,
+        "max_time": 0.1,
         "max_steps": 50000
     }
 
