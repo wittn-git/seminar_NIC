@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 import os
+import math
+import matplotlib.pyplot as plt
 
 def process_results(result_collection, max_time, algorithms):
     common_time = np.linspace(0, max_time, num=500)
@@ -28,16 +30,13 @@ def process_results(result_collection, max_time, algorithms):
 
     return processed_results
 
-import math
-import matplotlib.pyplot as plt
-
 def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
 
     n_plots = len(result_collections)
     n_rows = math.ceil(n_plots / n_cols)
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(10 * n_cols, 6 * n_rows))
-    plt.rcParams.update({'font.size': 18})
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(10 * n_cols, 5 * n_rows))
+    plt.rcParams.update({'font.size': 20})
 
     if n_rows == 1 and n_cols == 1:
         axes = [[axes]]
@@ -57,8 +56,9 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
             ax.plot(result["times"], result["errors"], label=name)
 
         ax.set_yscale('log')
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('MSE')
+        ax.set_xlabel('Time (s)', fontsize=18)
+        ax.set_ylabel('MSE', fontsize=18)
+        ax.tick_params(axis='both', which='major', labelsize=16)
         ax.set_title(title)
         ax.legend()
 
