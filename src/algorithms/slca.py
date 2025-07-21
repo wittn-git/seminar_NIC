@@ -4,7 +4,7 @@ import time
 def run_slca(X, y, error_func, args):
 
     n_coefficients, max_time, max_steps  = args["n_coefficients"], args["max_time"], args["max_steps"]
-    lambdas, taus = np.linspace(0.01, 50, 15), np.linspace(0.01, 30, 15)
+    lambdas, taus = np.linspace(0.01, 75, 20), np.linspace(0.01, 30, 20)
 
     best_coefficients, best_time, best_errors = None, None, float('inf')
     for lambda_ in lambdas:
