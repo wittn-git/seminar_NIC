@@ -77,7 +77,7 @@ def get_seed(i, j):
 if __name__ == "__main__":
 
     # experimental setup
-    n_runs = 30
+    n_runs = 1
     coefficient_pairs = [
         (2, 0),
         (2, 2),
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 0.5,
+        "max_time": 0.25,
         "max_steps": 50000
     }
 

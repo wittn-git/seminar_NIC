@@ -22,8 +22,8 @@ def process_results(result_collection, max_time, algorithms):
         mean_errors = np.mean(interpolated_runs, axis=0)
 
         processed_results[name] = {
-            "times": common_time,
-            "errors": mean_errors
+            "times": common_time[1:],
+            "errors": mean_errors[1:]
         }
 
     return processed_results
