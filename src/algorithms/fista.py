@@ -9,8 +9,7 @@ from proxtorch.operators import L1
 def run_fista(X, y, error_function, args):
     
     n_coefficients, max_time, max_steps = args["n_coefficients"], args["max_time"], args["max_steps"]
-    #lambdas, learning_rates = np.linspace(0.01, 1, 10), np.linspace(0.001, 0.3, 10)
-    lambdas, learning_rates = [0.7], [0.01]
+    lambdas, learning_rates = np.linspace(0.01, 1, 10), np.linspace(0.001, 0.3, 10)
 
     best_coefficients, best_time, best_error = None, None, float('inf')
     for lambda_ in lambdas:
