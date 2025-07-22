@@ -5,7 +5,7 @@ import os
 import math
 import matplotlib.pyplot as plt
 
-def process_results(result_collection, max_time, algorithms):
+def process_results(result_collection, max_time, algorithms, exclude_first):
     common_time = np.linspace(0, max_time, num=500)
     processed_results = {}
 
@@ -23,14 +23,19 @@ def process_results(result_collection, max_time, algorithms):
         interpolated_runs = np.array(interpolated_runs)
         mean_errors = np.mean(interpolated_runs, axis=0)
 
+        common_time_ = common_time
+        if exclude_first:
+            common_time_ = common_time_[1:]
+            mean_errors = mean_errors[1:]
+
         processed_results[name] = {
-            "times": common_time[1:],
-            "errors": mean_errors[1:]
+            "times": common_time_,
+            "errors": mean_errors,
         }
 
     return processed_results
 
-def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
+def save_timeplot(result_collections, titles, max_time, algorithms, n_cols, exclude_first):
 
     n_plots = len(result_collections)
     n_rows = math.ceil(n_plots / n_cols)
@@ -50,7 +55,7 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
         col = idx % n_cols
         ax = axes[row][col]
 
-        processed_results = process_results(result_collection, max_time, algorithms)
+        processed_results = process_results(result_collection, max_time, algorithms, exclude_first)
 
         for name, result in processed_results.items():
             ax.plot(result["times"], result["errors"], label=name)
@@ -71,6 +76,6 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
     plt.tight_layout()
     if not os.path.exists('plots'):
         os.makedirs('plots')
-    plt.savefig(f'plots/time_plots_grid.png')
-    plt.savefig(f'plots/time_plots_grad.svg')
+    plt.savefig(f'plots/time_plots_grid_{exclude_first}.png')
+    plt.savefig(f'plots/time_plots_grad_{exclude_first}.svg')
     plt.close()

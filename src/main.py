@@ -5,6 +5,7 @@ from plotting.coeff_plot import save_lineplot
 from plotting.time_plot import save_timeplot
 import numpy as np
 import os
+import pandas as pd
 
 def generate_data(n, p, n_fixed_coefficients):
     
@@ -73,6 +74,25 @@ def run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficie
 
 def get_seed(i, j):
     return (i + 1) * (j + 5) * 150 + 16 * i + 4
+
+def to_csv(result_collections, coefficients):
+    data = []
+    for i, result_collection in enumerate(result_collections):
+        for j, results in enumerate(result_collection):
+            for algorithm, result in results.items():
+                for k, time in enumerate(result['times']):
+                    data.append({
+                        "run": j,
+                        "seed": get_seed(i, j),
+                        "algorithm": algorithm,
+                        "time": time,
+                        "error": result['errors'][k],
+                        "coefficients": str(coefficients[i]).replace(",", ";")
+                    })
+    if not os.path.exists("results"):
+        os.makedirs("results")
+    df = pd.DataFrame(data)
+    df.to_csv("results/results.csv", index=False)
     
 if __name__ == "__main__":
 
@@ -110,4 +130,6 @@ if __name__ == "__main__":
         result_collections.append(result_collection)
         titles.append(f"{n_fixed_coefficients} fixed, {n_random_coefficients} random coefficients")
         record_results(result_collection, true_coefficients_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
-    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2)
+    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2, True)
+    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2, False)
+    to_csv(result_collections, coefficient_pairs)
