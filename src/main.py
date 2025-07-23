@@ -97,12 +97,12 @@ def to_csv(result_collections, coefficients):
 if __name__ == "__main__":
 
     # experimental setup
-    n_runs = 30
+    n_runs = 25
     coefficient_pairs = [
-        (2, 0),
-        (2, 2),
-        (2, 4),
-        (4, 4)
+        (250, 0),
+        (250, 250),
+        (250, 500),
+        (500, 500)
     ]
     
     # other parameters
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 0.1,
+        "max_time": 0.05,
         "max_steps": 50000
     }
 
@@ -131,5 +131,4 @@ if __name__ == "__main__":
         titles.append(f"{n_fixed_coefficients} fixed, {n_random_coefficients} random coefficients")
         record_results(result_collection, true_coefficients_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
     save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2, True)
-    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2, False)
     to_csv(result_collections, coefficient_pairs)

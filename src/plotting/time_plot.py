@@ -60,7 +60,7 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols, excl
         for name, result in processed_results.items():
             ax.plot(result["times"], result["errors"], label=name)
 
-        ax.set_xscale('log')
+        #ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlabel('Time (s)', fontsize=18)
         ax.set_ylabel('MSE', fontsize=18)
@@ -76,6 +76,6 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols, excl
     plt.tight_layout()
     if not os.path.exists('plots'):
         os.makedirs('plots')
-    plt.savefig(f'plots/time_plots_grid_{exclude_first}.png')
-    plt.savefig(f'plots/time_plots_grad_{exclude_first}.svg')
+    plt.savefig(f'plots/time_plots_grid.png')
+    plt.savefig(f'plots/time_plots_grad.svg')
     plt.close()
