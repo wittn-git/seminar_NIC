@@ -1,10 +1,5 @@
-import matplotlib.pyplot as plt
-import torch
-import torch.optim as optim
-from torch.nn import Parameter
 import numpy as np
 import time
-from proxtorch.operators import L1
 
 def run_ista(X, y, error_function, args):
 
@@ -35,15 +30,15 @@ def ista(A, b, l, n_coefficients, max_time, max_steps):
 
     time0 = time.time()
     times = [0]
+    t = 0
 
-    for k in range(max_steps - 1):
-        if time.time() - time0 > max_time:
-            break
+    while time.time() - time0 < max_time:
 
         x = soft_thresh(x + A.T @ (b - A @ x) / L, l / L)
 
-        coefficients[:, k + 1] = x
+        coefficients[:, t + 1] = x
         times.append(time.time() - time0)
+        t += 1
 
-    coefficients = coefficients[:, :k+1]
+    coefficients = coefficients[:, :t+1]
     return coefficients, times

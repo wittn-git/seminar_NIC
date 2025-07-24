@@ -5,8 +5,8 @@ def run_slca(X, y, error_func, args):
 
     max_lambda = np.max(np.abs(X.T @ y))
     n_coefficients, max_time, max_steps = args["n_coefficients"], args["max_time"], args["max_steps"]
-    lambdas = np.linspace(0.001 * max_lambda, max_lambda, 15)
-    taus = np.linspace(1, 100, 15)
+    lambdas = np.logspace(np.log10(max_lambda * 1e-4), np.log10(max_lambda), 15)
+    taus = np.linspace(1, 100, 10)
 
     best_coefficients, best_time, best_errors = None, None, float('inf')
     for lambda_ in lambdas:
@@ -27,9 +27,9 @@ def slca(X, y, n_coefficients, max_time, max_steps, lambda_, tau):
     b = X.T @ y
     w = X.T @ X    
 
-    times = []
+    times = [0]
     time_0 = time.time()
-    t = 0
+    t = 1
 
     v = np.zeros(n_coefficients)
     while time.time() - time_0 < max_time:
@@ -42,7 +42,7 @@ def slca(X, y, n_coefficients, max_time, max_steps, lambda_, tau):
         times.append(time.time() - time_0)
         t += 1
     
-    spikes = spikes[:, :t]
+    spikes = spikes[:, :t+1]
     spike_rates = np.zeros((n_coefficients, t))
     for j in range(t):
         for i in range(n_coefficients):

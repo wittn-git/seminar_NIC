@@ -99,10 +99,10 @@ if __name__ == "__main__":
     # experimental setup
     n_runs = 25
     coefficient_pairs = [
-        (250, 0),
-        (250, 250),
-        (250, 500),
-        (500, 500)
+        (5, 500),
+        (10, 500),
+        (50, 500),
+        (100, 500)
     ]
     
     # other parameters
