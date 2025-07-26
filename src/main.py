@@ -39,16 +39,14 @@ def get_error(X, y, coefficients):
     y_pred = X @ coefficients
     return np.mean((y_pred - y) ** 2)
 
-def record_results(result_collection, true_coefficients_collection, seeds, algorithm_names, file_name):
+def record_results(result_collection, seeds, algorithm_names, file_name):
     result_folder = "results"
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
     with open(f"{result_folder}/{file_name}.txt", "w") as f:
         for i, results in enumerate(result_collection):
             f.write(f"Run {i + 1} (Seed: {seeds[i]}):\n")
-            f.write(f"  True Coefficients: {true_coefficients_collection[i]}\n")
             for name in algorithm_names:
-                f.write(f"  {name} Coefficients: {results[name]['coeffs'][:, -1]}\n")
                 f.write(f"  {name} Error: {results[name]['errors'][-1]}\n")
             f.write("\n")
         f.write("Average and Standard Deviation of Last Errors:\n")
@@ -67,8 +65,8 @@ def run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficie
 
     results = {}
     for name, algorithm in algorithms.items():
-        coeffs, times, errors = algorithm(X_norm, y_norm, error_func, args)
-        results[name] = {"coeffs": coeffs, "times": times, "errors": errors}
+        _, times, errors = algorithm(X_norm, y_norm, error_func, args)
+        results[name] = {"times": times, "errors": errors}
     
     return results, true_coefficients
 
@@ -86,8 +84,7 @@ def to_csv(result_collections, coefficients):
                         "seed": get_seed(i, j),
                         "algorithm": algorithm,
                         "time": time,
-                        "error": result['errors'][k],
-                        "coefficients": str(coefficients[i]).replace(",", ";")
+                        "error": result['errors'][k]
                     })
     if not os.path.exists("results"):
         os.makedirs("results")
@@ -119,16 +116,15 @@ if __name__ == "__main__":
 
     result_collections, titles = [], []
     for i, (n_fixed_coefficients, n_random_coefficients) in enumerate(coefficient_pairs):
-        result_collection, true_coefficients_collection, seeds = [], [], []
+        result_collection, seeds = [], []
         for j in range(n_runs):
             seed = get_seed(i, j)
             seeds.append(seed)
             args["n_coefficients"] = n_fixed_coefficients + n_random_coefficients
             results, true_coefficients = run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficients, algorithms, args)
             result_collection.append(results) 
-            true_coefficients_collection.append(true_coefficients)
         result_collections.append(result_collection)
         titles.append(f"{n_fixed_coefficients} fixed, {n_random_coefficients} random coefficients")
-        record_results(result_collection, true_coefficients_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
+        record_results(result_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
     save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2, True)
     to_csv(result_collections, coefficient_pairs)
