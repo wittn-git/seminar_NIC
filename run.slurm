@@ -4,7 +4,7 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=dominic.wittner@rwth-aache.de
 #SBATCH --ntasks=1
-#SBATCH --time=01:00:00
-#SBATCH --mem=1G
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=64G
 
 python src/main.py
