@@ -5,7 +5,7 @@ def run_ista(X, y, error_function, args):
 
     max_lambda = np.max(np.abs(X.T @ y))
     n_coefficients, max_time, max_steps = args["n_coefficients"], args["max_time"], args["max_steps"]
-    lambdas = np.linspace(0.001 * max_lambda, max_lambda, 15)
+    lambdas = np.logspace(np.log10(max_lambda * 1e-4), np.log10(max_lambda), 15)
 
     best_coefficients, best_time, best_error = None, None, float('inf')
     for lambda_ in lambdas:

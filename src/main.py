@@ -98,8 +98,8 @@ if __name__ == "__main__":
     coefficient_pairs = [
         (5, 500),
         (10, 500),
-        (50, 500),
-        (100, 500)
+        (5, 1000),
+        (25, 1000)
     ]
     
     # other parameters
