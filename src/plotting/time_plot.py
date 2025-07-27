@@ -5,7 +5,7 @@ import os
 import math
 import matplotlib.pyplot as plt
 
-def process_results(result_collection, max_time, algorithms, exclude_first):
+def process_results(result_collection, max_time, algorithms):
     common_time = np.linspace(0, max_time, num=500)
     processed_results = {}
 
@@ -24,9 +24,6 @@ def process_results(result_collection, max_time, algorithms, exclude_first):
         mean_errors = np.mean(interpolated_runs, axis=0)
 
         common_time_ = common_time
-        if exclude_first:
-            common_time_ = common_time_[1:]
-            mean_errors = mean_errors[1:]
 
         processed_results[name] = {
             "times": common_time_,
@@ -35,7 +32,7 @@ def process_results(result_collection, max_time, algorithms, exclude_first):
 
     return processed_results
 
-def save_timeplot(result_collections, titles, max_time, algorithms, n_cols, exclude_first):
+def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
 
     n_plots = len(result_collections)
     n_rows = math.ceil(n_plots / n_cols)
@@ -49,24 +46,35 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols, excl
         axes = [axes]
     elif n_cols == 1:
         axes = [[ax] for ax in axes]
-
+    
+    max_x, max_y  = 0, 0
     for idx, (result_collection, title) in enumerate(zip(result_collections, titles)):
         row = idx // n_cols
         col = idx % n_cols
         ax = axes[row][col]
 
-        processed_results = process_results(result_collection, max_time, algorithms, exclude_first)
+        processed_results = process_results(result_collection, max_time, algorithms)
+        if max_x < max(processed_results[next(iter(processed_results))]["times"]):
+            max_x = max(processed_results[next(iter(processed_results))]["times"])
+        if max_y < max(max(result["errors"]) for result in processed_results.values()):
+            max_y = max(max(result["errors"]) for result in processed_results.values())
 
         for name, result in processed_results.items():
             ax.plot(result["times"], result["errors"], label=name)
 
-        #ax.set_xscale('log')
+        if idx // n_cols == n_rows - 1:
+            ax.set_xlabel('Time (s)', fontsize=18)
+        if idx % n_cols == 0:
+            ax.set_ylabel('MSE', fontsize=18)
         ax.set_yscale('log')
-        ax.set_xlabel('Time (s)', fontsize=18)
-        ax.set_ylabel('MSE', fontsize=18)
         ax.tick_params(axis='both', which='major', labelsize=16)
         ax.set_title(title)
         ax.legend()
+    
+    for row in axes:
+        for ax in row:
+            ax.set_xlim(0, max_x)
+            ax.set_ylim(0, max_y)
 
     for idx in range(n_plots, n_rows * n_cols):
         row = idx // n_cols

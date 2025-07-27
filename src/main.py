@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 0.05,
+        "max_time": 0.2,
         "max_steps": 50000
     }
 
@@ -126,5 +126,5 @@ if __name__ == "__main__":
         result_collections.append(result_collection)
         titles.append(f"{n_fixed_coefficients} fixed, {n_random_coefficients} random coefficients")
         record_results(result_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
-    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2, True)
+    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2)
     to_csv(result_collections, coefficient_pairs)
