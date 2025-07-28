@@ -47,37 +47,34 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
     elif n_cols == 1:
         axes = [[ax] for ax in axes]
     
-    max_x, max_y  = 0, 0
+    max_y  = 0
     for idx, (result_collection, title) in enumerate(zip(result_collections, titles)):
         row = idx // n_cols
         col = idx % n_cols
         ax = axes[row][col]
 
         processed_results = process_results(result_collection, max_time, algorithms)
-        if max_x < max(processed_results[next(iter(processed_results))]["times"]):
-            max_x = max(processed_results[next(iter(processed_results))]["times"])
         if max_y < max(max(result["errors"]) for result in processed_results.values()):
             max_y = max(max(result["errors"]) for result in processed_results.values())
 
         line_styles = ['-', ':', '--']
         for i, (name, result) in enumerate(processed_results.items()):
             linestyle = line_styles[i % len(line_styles)]
-            ax.plot(result["times"], result["errors"], label=name, linestyle=linestyle, linewidth=2)
+            ax.plot(result["times"], result["errors"], label=name, linestyle=linestyle, linewidth=2, color="black")
 
         if idx // n_cols == n_rows - 1:
             ax.set_xlabel('Time (s)', fontsize=18)
         if idx % n_cols == 0:
             ax.set_ylabel('MSE', fontsize=18)
+        ax.set_xscale('log')
         ax.set_yscale('log')
         ax.tick_params(axis='both', which='major', labelsize=16)
         ax.set_title(title)
         ax.legend()
     
-    max_x = max_x + 0.05 * max_x
     max_y = max_y + 0.05 * max_y
     for row in axes:
         for ax in row:
-            ax.set_xlim(0, max_x)
             ax.set_ylim(0, max_y)
 
     for idx in range(n_plots, n_rows * n_cols):

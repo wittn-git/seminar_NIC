@@ -94,12 +94,12 @@ def to_csv(result_collections, coefficients):
 if __name__ == "__main__":
 
     # experimental setup
-    n_runs = 25
+    n_runs = 1
     coefficient_pairs = [
         (5, 500),
         (10, 500),
-        (5, 1000),
-        (10, 1000)
+        (10, 1000),
+        (15, 1000)
     ]
     
     # other parameters
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 0.125,
+        "max_time": 0.2,
         "max_steps": 50000
     }
 
