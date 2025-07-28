@@ -71,6 +71,8 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
         ax.set_title(title)
         ax.legend()
     
+    max_x = max_x + 0.05 * max_x
+    max_y = max_y + 0.05 * max_y
     for row in axes:
         for ax in row:
             ax.set_xlim(0, max_x)

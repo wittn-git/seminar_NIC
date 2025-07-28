@@ -98,8 +98,8 @@ if __name__ == "__main__":
     coefficient_pairs = [
         (5, 500),
         (10, 500),
-        (10, 1000),
-        (25, 1000)
+        (5, 1000),
+        (10, 1000)
     ]
     
     # other parameters
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "ISTA": run_ista,
     }
     args = {
-        "max_time": 0.2,
+        "max_time": 0.125,
         "max_steps": 50000
     }
 
