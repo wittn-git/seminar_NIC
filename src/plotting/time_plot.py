@@ -59,8 +59,10 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
         if max_y < max(max(result["errors"]) for result in processed_results.values()):
             max_y = max(max(result["errors"]) for result in processed_results.values())
 
-        for name, result in processed_results.items():
-            ax.plot(result["times"], result["errors"], label=name)
+        line_styles = ['-', ':', '--']
+        for i, (name, result) in enumerate(processed_results.items()):
+            linestyle = line_styles[i % len(line_styles)]
+            ax.plot(result["times"], result["errors"], label=name, linestyle=linestyle, linewidth=2)
 
         if idx // n_cols == n_rows - 1:
             ax.set_xlabel('Time (s)', fontsize=18)
