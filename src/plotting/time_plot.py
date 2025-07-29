@@ -32,7 +32,7 @@ def process_results(result_collection, max_time, algorithms):
 
     return processed_results
 
-def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
+def save_timeplot(result_collections, file_suffix, titles, max_time, algorithms, n_cols, x_log=False, y_log=False):
 
     n_plots = len(result_collections)
     n_rows = math.ceil(n_plots / n_cols)
@@ -47,7 +47,8 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
     elif n_cols == 1:
         axes = [[ax] for ax in axes]
     
-    max_y  = 0
+    min_y, max_y = float('inf'), 0
+    
     for idx, (result_collection, title) in enumerate(zip(result_collections, titles)):
         row = idx // n_cols
         col = idx % n_cols
@@ -56,6 +57,8 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
         processed_results = process_results(result_collection, max_time, algorithms)
         if max_y < max(max(result["errors"]) for result in processed_results.values()):
             max_y = max(max(result["errors"]) for result in processed_results.values())
+        if min_y > min(min(result["errors"]) for result in processed_results.values()):
+            min_y = min(min(result["errors"]) for result in processed_results.values())
 
         line_styles = ['-', ':', '--']
         for i, (name, result) in enumerate(processed_results.items()):
@@ -66,16 +69,22 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
             ax.set_xlabel('Time (s)', fontsize=18)
         if idx % n_cols == 0:
             ax.set_ylabel('MSE', fontsize=18)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        
+        if x_log:
+            ax.set_xscale('log')
+        if y_log:
+            ax.set_yscale('log')
+            
         ax.tick_params(axis='both', which='major', labelsize=16)
         ax.set_title(title)
         ax.legend()
     
-    max_y = max_y + 0.05 * max_y
+    max_y = max_y * 1.05
+    min_y = min_y * 0.95 
+    
     for row in axes:
         for ax in row:
-            ax.set_ylim(0, max_y)
+            ax.set_ylim(min_y, max_y)
 
     for idx in range(n_plots, n_rows * n_cols):
         row = idx // n_cols
@@ -85,6 +94,6 @@ def save_timeplot(result_collections, titles, max_time, algorithms, n_cols):
     plt.tight_layout()
     if not os.path.exists('plots'):
         os.makedirs('plots')
-    plt.savefig(f'plots/time_plots_grid.png')
-    plt.savefig(f'plots/time_plots_grad.svg')
+    plt.savefig(f'plots/time_plots_grid_{file_suffix}.png')
+    plt.savefig(f'plots/time_plots_grad_{file_suffix}.svg')
     plt.close()

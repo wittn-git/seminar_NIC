@@ -73,7 +73,7 @@ def run_experiment(seed, n_data_points, n_fixed_coefficients, n_random_coefficie
 def get_seed(i, j):
     return (i + 1) * (j + 5) * 150 + 16 * i + 4
 
-def to_csv(result_collections, coefficients):
+def to_csv(result_collections, coefficient_pairs):
     data = []
     for i, result_collection in enumerate(result_collections):
         for j, results in enumerate(result_collection):
@@ -84,7 +84,8 @@ def to_csv(result_collections, coefficients):
                         "seed": get_seed(i, j),
                         "algorithm": algorithm,
                         "time": time,
-                        "error": result['errors'][k]
+                        "error": result['errors'][k],
+                        "coefficients": str(coefficient_pairs[i]).replace(",", ";")
                     })
     if not os.path.exists("results"):
         os.makedirs("results")
@@ -126,5 +127,7 @@ if __name__ == "__main__":
         result_collections.append(result_collection)
         titles.append(f"{n_fixed_coefficients} fixed, {n_random_coefficients} random coefficients")
         record_results(result_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
-    save_timeplot(result_collections, titles, args["max_time"], algorithms.keys(), 2)
+    
+    for x_log, y_log in [(False, False), (True, False), (False, True), (True, True)]:
+        save_lineplot(result_collections, str(x_log) + "-" + str(y_log), titles, args["max_time"], algorithms.keys(), 2, x_log, y_log)
     to_csv(result_collections, coefficient_pairs)
