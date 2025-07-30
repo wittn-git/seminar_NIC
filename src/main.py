@@ -95,7 +95,7 @@ def to_csv(result_collections, coefficient_pairs):
 if __name__ == "__main__":
 
     # experimental setup
-    n_runs = 1
+    n_runs = 30
     coefficient_pairs = [
         (5, 500),
         (10, 500),
@@ -129,5 +129,5 @@ if __name__ == "__main__":
         record_results(result_collection, seeds, algorithms.keys(), f'results_{n_fixed_coefficients}_{n_random_coefficients}')
     
     for x_log, y_log in [(False, False), (True, False), (False, True), (True, True)]:
-        save_lineplot(result_collections, str(x_log) + "-" + str(y_log), titles, args["max_time"], algorithms.keys(), 2, x_log, y_log)
+        save_timeplot(result_collections, str(x_log) + "-" + str(y_log), titles, args["max_time"], algorithms.keys(), 2, x_log, y_log)
     to_csv(result_collections, coefficient_pairs)
